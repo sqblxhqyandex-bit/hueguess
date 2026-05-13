@@ -1,0 +1,110 @@
+[
+  {
+    "id": "nova",
+    "name": "Nova",
+    "tagline": "Space Cadet",
+    "part": "helmet visor",
+    "h": 200,
+    "s": 85,
+    "b": 95
+  },
+  {
+    "id": "bramble",
+    "name": "Bramble",
+    "tagline": "Forest Bear",
+    "part": "mail satchel",
+    "h": 25,
+    "s": 75,
+    "b": 75
+  },
+  {
+    "id": "pip",
+    "name": "Pip",
+    "tagline": "Parade Duck",
+    "part": "drum major jacket",
+    "h": 350,
+    "s": 85,
+    "b": 90
+  },
+  {
+    "id": "bolt",
+    "name": "Bolt",
+    "tagline": "Robot Buddy",
+    "part": "chest panel",
+    "h": 120,
+    "s": 70,
+    "b": 80
+  },
+  {
+    "id": "ribbon",
+    "name": "Ribbon",
+    "tagline": "Bunny Runner",
+    "part": "scarf",
+    "h": 220,
+    "s": 75,
+    "b": 85
+  },
+  {
+    "id": "taffy",
+    "name": "Taffy",
+    "tagline": "Candy Pup",
+    "part": "apron",
+    "h": 330,
+    "s": 65,
+    "b": 95
+  },
+  {
+    "id": "moon",
+    "name": "Moonsail",
+    "tagline": "Sailor Moon",
+    "part": "sailor collar",
+    "h": 45,
+    "s": 90,
+    "b": 95
+  },
+  {
+    "id": "fable",
+    "name": "Fable",
+    "tagline": "Story Fox",
+    "part": "glasses frame",
+    "h": 340,
+    "s": 80,
+    "b": 85
+  },
+  {
+    "id": "jazz",
+    "name": "Jazz",
+    "tagline": "Club Frog",
+    "part": "vest",
+    "h": 280,
+    "s": 60,
+    "b": 75
+  },
+  {
+    "id": "glimmer",
+    "name": "Glimmer",
+    "tagline": "Nightlight",
+    "part": "lantern",
+    "h": 50,
+    "s": 95,
+    "b": 100
+  },
+  {
+    "id": "chomp",
+    "name": "Chomp",
+    "tagline": "Snack Chef",
+    "part": "chef hat",
+    "h": 0,
+    "s": 0,
+    "b": 95
+  },
+  {
+    "id": "blip",
+    "name": "Blip",
+    "tagline": "Pixel Pet",
+    "part": "screen face",
+    "h": 190,
+    "s": 85,
+    "b": 90
+  }
+]
