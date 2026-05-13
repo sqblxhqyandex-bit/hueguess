@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play ToneGuess - Cartoon Color Memory Game</title>
+    <meta name="description" content="Play ToneGuess online free. Study cartoon character colors, tune HSB sliders from memory, and score 10/10. 5 rounds, no signup needed.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://toneguess.pages.dev/play">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        :root {
+            --bg: #0b0b14;
+            --card: #14141f;
+            --card2: #1a1a2e;
+            --surface: #20203a;
+            --accent: #e94560;
+            --accent2: #0f3460;
+            --text: #eee;
+            --text2: #7676a0;
+            --success: #2ecc71;
+            --gold: #f0c840;
+            --border: #2a2a4a;
+        }
+        body { font-family: 'Inter',-apple-system,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0; }
+
+        .top-bar {
+            width: 100%; max-width: 560px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 20px 8px;
+        }
+        .top-bar .logo { font-size: 20px; font-weight: 800; text-decoration: none; color: var(--text); }
+        .top-bar .logo span { color: var(--accent); }
+        .top-bar .back { color: var(--text2); text-decoration: none; font-size: 13px; }
+        .top-bar .back:hover { color: var(--text); }
+
+        .stats { display: flex; gap: 14px; font-size: 12px; color: var(--text2); }
+        .stats strong { color: var(--text); }
+
+        .container { width: 100%; max-width: 560px; padding: 0 16px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-top: 8px; }
+        .ad { width: 100%; max-width: 560px; min-height: 60px; background: var(--card); border: 1px dashed var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text2); margin-top: 12px; }
+
+        .start-screen { text-align: center; padding: 30px 10px; }
+        .start-screen .icon { font-size: 64px; margin-bottom: 8px; }
+        .start-screen h1 { font-size: 28px; font-weight: 900; margin-bottom: 4px; }
+        .start-screen .tagline { color: var(--text2); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+        .start-btn { padding: 16px 48px; border: none; border-radius: 14px; background: var(--accent); color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .1s; }
+        .start-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(233,69,96,.3); }
+        .start-btn:active { transform: scale(.98); }
+        .start-screen .info { font-size: 11px; color: var(--text2); margin-top: 14px; }
+
+        .round-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+        .round-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
+        .round-dot.active { background: var(--accent); }
+        .round-dot.done { background: var(--success); }
+        .round-dot.hinted { background: var(--gold); }
+
+        .study-phase { text-align: center; }
+        .study-header { margin-bottom: 12px; }
+        .study-header .label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+        .study-header .name { font-size: 22px; font-weight: 800; margin-top: 2px; }
+        .study-header .part { color: var(--text2); font-weight: 400; }
+        .study-header .tag { font-size: 12px; color: var(--gold); margin-top: 2px; }
+
+        .char-card { position: relative; width: 200px; height: 200px; margin: 0 auto 16px; background: var(--surface); border-radius: 16px; border: 2px solid var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .char-card img { width: 180px; height: 180px; }
+        .char-card .focus-ring { position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 3px dashed var(--accent); border-radius: 12px; opacity: .4; animation: pulse-ring 1.5s infinite; pointer-events: none; }
+        @keyframes pulse-ring { 0%,100%{opacity:.2}50%{opacity:.6} }
+
+        .study-hint { font-size: 13px; color: var(--text2); margin-bottom: 16px; animation: pulse-text 2s infinite; }
+        @keyframes pulse-text { 0%,100%{opacity:1}50%{opacity:.4} }
+        .ready-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent2); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+        .guess-phase { display: none; }
+        .guess-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .guess-header .left { text-align: left; }
+        .guess-header .left .label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+        .guess-header .left .name { font-size: 15px; font-weight: 700; }
+        .guess-header .preview { width: 48px; height: 48px; border-radius: 10px; border: 2px solid var(--border); transition: background .05s; }
+
+        .slider-group { margin-bottom: 14px; }
+        .slider-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+        .slider-label { font-weight: 600; }
+        .slider-label.h { color: #ff6b6b; }
+        .slider-label.s { color: #feca57; }
+        .slider-label.b { color: #54a0ff; }
+        .slider-value { color: var(--text2); font-family: monospace; }
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid var(--border); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+        #hue-slider { background: linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
+        #sat-slider { background: linear-gradient(to right,#666,var(--accent)); }
+        #bri-slider { background: linear-gradient(to right,#000,var(--accent)); }
+
+        .hint-btn { width: 100%; padding: 10px; border: 1px dashed var(--border); border-radius: 10px; background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; margin-bottom: 14px; transition: all .2s; }
+        .hint-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .hint-btn:disabled { opacity: .3; cursor: default; border-color: var(--border); color: var(--text2); }
+
+        .submit-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .submit-btn:active { transform: scale(.98); }
+        .submit-btn:disabled { opacity: .4; cursor: default; }
+
+        .result-area { display: none; margin-top: 20px; }
+        .result-area.show { display: block; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .comparison-item { background: var(--surface); border-radius: 14px; padding: 14px; text-align: center; border: 1px solid var(--border); }
+        .comparison-item .char-img { width: 120px; height: 120px; margin: 0 auto 8px; }
+        .comparison-item .char-img img { width: 110px; height: 110px; }
+        .comparison-item .label { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+        .comparison-item .hsb { font-size: 11px; font-family: monospace; color: var(--text2); }
+        .score-display { text-align: center; padding: 16px; background: var(--card2); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 16px; }
+        .score-number { font-size: 40px; font-weight: 900; }
+        .score-label { font-size: 12px; color: var(--text2); }
+        .next-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent2); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+        .gameover-card { text-align: center; padding: 30px 16px; }
+        .gameover-card .big-icon { font-size: 56px; margin-bottom: 4px; }
+        .final-score { font-size: 56px; font-weight: 900; margin: 8px 0; }
+        .final-label { font-size: 13px; color: var(--text2); }
+        .breakdown { margin: 16px auto; max-width: 280px; }
+        .breakdown-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+        .breakdown-row.total { border-top: 2px solid var(--accent); font-weight: 700; margin-top: 4px; padding-top: 10px; }
+        .play-again-btn { padding: 14px 40px; border: none; border-radius: 12px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+
+        footer { width: 100%; max-width: 560px; text-align: center; padding: 20px 0 10px; font-size: 11px; color: var(--text2); }
+        footer a { color: var(--text2); text-decoration: none; margin: 0 8px; }
+        footer a:hover { color: var(--text); }
+
+        @media(max-width:480px) {
+            .card { padding: 16px; border-radius: 14px; }
+            .char-card { width: 160px; height: 160px; }
+            .char-card img { width: 150px; height: 150px; }
+            .comparison-item .char-img { width: 90px; height: 90px; }
+            .comparison-item .char-img img { width: 80px; height: 80px; }
+            .final-score { font-size: 42px; }
+        }
+        .hidden { display: none!important; }
+    </style>
+</head>
+<body>
+<div class="top-bar">
+    <a href="/" class="logo">Tone<span>Guess</span></a>
+    <div class="stats">
+        <span>Best: <strong id="best-score">-</strong></span>
+        <span>Games: <strong id="games-count">0</strong></span>
+        <a href="/" class="back">← Home</a>
+    </div>
+</div>
+
+<div class="ad">Ad Space</div>
+
+<div class="container">
+    <div class="card" id="app-card">
+        <!-- START -->
+        <div id="start-screen" class="start-screen">
+            <div class="icon">🎨</div>
+            <h1>ToneGuess</h1>
+            <div class="tagline">5 rounds of cartoon color memory challenge.<br>Study, recall, tune, repeat.</div>
+            <button class="start-btn" onclick="startGame()">▶ Start Game</button>
+            <div class="info">Free • No signup • 12 original characters</div>
+        </div>
+
+        <!-- GAME -->
+        <div id="game-screen" style="display:none;">
+            <div class="round-bar" id="round-bar">
+                <div class="round-dot active"></div>
+                <div class="round-dot"></div>
+                <div class="round-dot"></div>
+                <div class="round-dot"></div>
+                <div class="round-dot"></div>
+            </div>
+
+            <div id="study-phase" class="study-phase">
+                <div class="study-header">
+                    <div class="label">🎯 Remember this color</div>
+                    <div class="name"><span id="study-name"></span>'s <span id="study-part" class="part"></span></div>
+                    <div class="tag" id="study-tag"></div>
+                </div>
+                <div class="char-card">
+                    <img id="char-img" alt="Character">
+                    <div class="focus-ring"></div>
+                </div>
+                <div class="study-hint">👀 Memorize this color...</div>
+                <button class="ready-btn" onclick="showGuess()">✅ Got it!</button>
+            </div>
+
+            <div id="guess-phase" class="guess-phase">
+                <div class="guess-header">
+                    <div class="left">
+                        <div class="label">🎨 Recreate from memory</div>
+                        <div class="name"><span id="guess-name"></span>'s <span id="guess-part"></span></div>
+                    </div>
+                    <div class="preview" id="guess-preview"></div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label h">Hue</span>
+                        <span class="slider-value" id="hue-val">0°</span>
+                    </div>
+                    <input type="range" id="hue-slider" min="0" max="360" value="0" oninput="updatePreview()">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label s">Saturation</span>
+                        <span class="slider-value" id="sat-val">50%</span>
+                    </div>
+                    <input type="range" id="sat-slider" min="0" max="100" value="50" oninput="updatePreview()">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label b">Brightness</span>
+                        <span class="slider-value" id="bri-val">50%</span>
+                    </div>
+                    <input type="range" id="bri-slider" min="0" max="100" value="50" oninput="updatePreview()">
+                </div>
+
+                <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 Peek at color (-1 point)</button>
+                <button class="submit-btn" id="submit-btn" onclick="submitGuess()">Submit Guess</button>
+
+                <div class="result-area" id="result-area">
+                    <div class="comparison">
+                        <div class="comparison-item">
+                            <div class="char-img" id="result-guess-img"><img alt="Your guess"></div>
+                            <div class="label">Your tone</div>
+                            <div class="hsb" id="result-guess-hsb"></div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="char-img" id="result-target-img"><img alt="Original"></div>
+                            <div class="label">Original</div>
+                            <div class="hsb" id="result-target-hsb"></div>
+                        </div>
+                    </div>
+                    <div class="score-display">
+                        <div class="score-number" id="round-score">8.5</div>
+                        <div class="score-label">/ 10</div>
+                    </div>
+                    <button class="next-btn" id="next-btn" onclick="nextRound()">Next Round →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME OVER -->
+        <div id="gameover-screen" style="display:none;">
+            <div class="gameover-card">
+                <div class="big-icon">🏆</div>
+                <div class="final-label">Your Average Score</div>
+                <div class="final-score" id="final-score">0.00</div>
+                <div class="breakdown" id="breakdown"></div>
+                <button class="play-again-btn" onclick="startGame()">🔄 Play Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ad">Ad Space</div>
+
+<footer>
+    <a href="/">Home</a> • <a href="/privacy">Privacy</a> • <a href="/terms">Terms</a>
+    <p style="margin-top:4px">&copy; 2026 ToneGuess</p>
+</footer>
+
+<script>
+const CHARS = [
+    {id:'nova',name:'Nova',tag:'Space Cadet',part:'helmet visor',h:200,s:85,b:95},
+    {id:'bramble',name:'Bramble',tag:'Forest Bear',part:'mail satchel',h:25,s:75,b:75},
+    {id:'pip',name:'Pip',tag:'Parade Duck',part:'drum major jacket',h:350,s:85,b:90},
+    {id:'bolt',name:'Bolt',tag:'Robot Buddy',part:'chest panel',h:120,s:70,b:80},
+    {id:'ribbon',name:'Ribbon',tag:'Bunny Runner',part:'scarf',h:220,s:75,b:85},
+    {id:'taffy',name:'Taffy',tag:'Candy Pup',part:'apron',h:330,s:65,b:95},
+    {id:'moon',name:'Moonsail',tag:'Sailor Moon',part:'sailor collar',h:45,s:90,b:95},
+    {id:'fable',name:'Fable',tag:'Story Fox',part:'glasses frame',h:340,s:80,b:85},
+    {id:'jazz',name:'Jazz',tag:'Club Frog',part:'vest',h:280,s:60,b:75},
+    {id:'glimmer',name:'Glimmer',tag:'Nightlight',part:'lantern',h:50,s:95,b:100},
+    {id:'chomp',name:'Chomp',tag:'Snack Chef',part:'chef hat',h:0,s:0,b:95},
+    {id:'blip',name:'Blip',tag:'Pixel Pet',part:'screen face',h:190,s:85,b:90}
+];
+
+const ROUNDS = 5;
+const HINT_OFF = [8,12,18];
+let state, curChar;
+
+function init() {
+    state = {
+        round:0, scores:[], hints:[],
+        best: parseFloat(localStorage.getItem('tg_best'))||0,
+        games: parseInt(localStorage.getItem('tg_games'))||0
+    };
+    document.getElementById('best-score').textContent = state.best||'-';
+    document.getElementById('games-count').textContent = state.games;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function hsl(h,s,b){return \`hsl(\${h},\${s}%,\${b}%)\`}
+function dist(h1,s1,b1,h2,s2,b2){const d=Math.sqrt(((h1-h2)/360)**2+((s1-s2)/100)**2+((b1-b2)/100)**2)/Math.sqrt(3);return d}
+
+function calcScore(d){return Math.round(Math.max(Math.min(10*Math.pow(1-Math.min(d,1),2.8),10),0)*100)/100}
+
+async function startGame(){
+    init();
+    document.getElementById('start-screen').style.display='none';
+    document.getElementById('gameover-screen').style.display='none';
+    document.getElementById('game-screen').style.display='block';
+    state.round=0; state.scores=[]; state.hints=[];
+    await loadRound();
+}
+
+async function loadRound(){
+    document.getElementById('study-phase').style.display='block';
+    document.getElementById('guess-phase').style.display='none';
+    document.getElementById('result-area').classList.remove('show');
+    
+    const avail=shuffle([...CHARS]);
+    curChar=avail[0];
+    
+    document.getElementById('char-img').src='/toons/'+curChar.id+'.svg';
+    document.getElementById('study-name').textContent=curChar.name;
+    document.getElementById('study-part').textContent=curChar.part;
+    document.getElementById('study-tag').textContent=curChar.tag;
+    document.getElementById('guess-name').textContent=curChar.name;
+    document.getElementById('guess-part').textContent=curChar.part;
+    
+    document.getElementById('hue-slider').value=0;
+    document.getElementById('sat-slider').value=50;
+    document.getElementById('bri-slider').value=50;
+    updatePreview();
+    
+    document.getElementById('hint-btn').disabled=false;
+    document.getElementById('hint-btn').textContent='💡 Peek at color (-1 point)';
+    document.getElementById('submit-btn').disabled=false;
+    
+    const dots=document.querySelectorAll('.round-dot');
+    dots.forEach((d,i)=>{
+        d.className='round-dot';
+        if(i<state.round) d.classList.add('done');
+        else if(i===state.round) d.classList.add('active');
+        if(state.hints[i]) d.classList.add('hinted');
+    });
+}
+
+function updatePreview(){
+    const h=parseInt(document.getElementById('hue-slider').value);
+    const s=parseInt(document.getElementById('sat-slider').value);
+    const b=parseInt(document.getElementById('bri-slider').value);
+    document.getElementById('guess-preview').style.background=hsl(h,s,b);
+    document.getElementById('hue-val').textContent=h+'°';
+    document.getElementById('sat-val').textContent=s+'%';
+    document.getElementById('bri-val').textContent=b+'%';
+}
+
+function showGuess(){
+    document.getElementById('study-phase').style.display='none';
+    document.getElementById('guess-phase').style.display='block';
+}
+
+function useHint(){
+    const c=curChar;
+    const used=state.hints.filter(Boolean).length;
+    const off=HINT_OFF[used%HINT_OFF.length];
+    const ch=parseInt(document.getElementById('hue-slider').value);
+    const cs=parseInt(document.getElementById('sat-slider').value);
+    const cb=parseInt(document.getElementById('bri-slider').value);
+    document.getElementById('hue-slider').value=ch<c.h?Math.min(ch+off,c.h):Math.max(ch-off,c.h);
+    document.getElementById('sat-slider').value=cs<c.s?Math.min(cs+off,c.s):Math.max(cs-off,c.s);
+    document.getElementById('bri-slider').value=cb<c.b?Math.min(cb+off,c.b):Math.max(cb-off,c.b);
+    updatePreview();
+    document.getElementById('hint-btn').disabled=true;
+    document.getElementById('hint-btn').textContent='✅ Peek used (-1)';
+}
+
+async function submitGuess(){
+    const c=curChar;
+    const gh=parseInt(document.getElementById('hue-slider').value);
+    const gs=parseInt(document.getElementById('sat-slider').value);
+    const gb=parseInt(document.getElementById('bri-slider').value);
+    const hint=document.getElementById('hint-btn').disabled;
+    
+    let score=calcScore(dist(gh,gs,gb,c.h,c.s,c.b));
+    if(hint){score=Math.max(0,score-1);score=Math.round(score*100)/100;}
+    
+    state.scores.push(score);
+    state.hints.push(hint);
+    
+    document.getElementById('result-guess-img').innerHTML='<img src="/toons/'+c.id+'.svg" alt="Your guess" style="filter:hue-rotate('+(gh-c.h)+'deg) saturate('+(gs/c.s)+') brightness('+(gb/c.b)+')">';
+    document.getElementById('result-target-img').innerHTML='<img src="/toons/'+c.id+'.svg" alt="Original">';
+    document.getElementById('result-guess-hsb').textContent='H'+gh+' S'+gs+' B'+gb;
+    document.getElementById('result-target-hsb').textContent='H'+c.h+' S'+c.s+' B'+c.b;
+    
+    const el=document.getElementById('round-score');
+    el.textContent=score.toFixed(2);
+    el.style.color=score>=9?'#2ecc71':score>=7?'#f0c840':score>=5?'#e67e22':'#e94560';
+    
+    document.getElementById('result-area').classList.add('show');
+    document.getElementById('submit-btn').disabled=true;
+}
+
+async function nextRound(){
+    state.round++;
+    if(state.round>=ROUNDS){endGame();return;}
+    await loadRound();
+}
+
+function endGame(){
+    const avg=state.scores.reduce((a,b)=>a+b,0)/state.scores.length;
+    const final=Math.round(avg*100)/100;
+    if(final>state.best){state.best=final;localStorage.setItem('tg_best',final);}
+    state.games++;localStorage.setItem('tg_games',state.games);
+    document.getElementById('best-score').textContent=state.best||'-';
+    document.getElementById('games-count').textContent=state.games;
+    
+    document.getElementById('game-screen').style.display='none';
+    document.getElementById('gameover-screen').style.display='block';
+    document.getElementById('final-score').textContent=final.toFixed(2);
+    
+    const bd=document.getElementById('breakdown');
+    bd.innerHTML='';
+    state.scores.forEach((s,i)=>{
+        const r=document.createElement('div');r.className='breakdown-row';
+        r.innerHTML='<span>Round '+(i+1)+(state.hints[i]?' 💡':'')+'</span><span>'+s.toFixed(2)+'</span>';
+        bd.appendChild(r);
+    });
+    const t=document.createElement('div');t.className='breakdown-row total';
+    t.innerHTML='<span>'+(final>=9?'🏆':final>=7?'🌟':final>=5?'👍':'😅')+' Average</span><span>'+final.toFixed(2)+'</span>';
+    bd.appendChild(t);
+}
+
+init();
+</script>
+</body>
+</html>
